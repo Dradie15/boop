@@ -1,0 +1,1175 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Meme Coin Research</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+    <style>
+        /* Tailwind CSS Base */
+        *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}
+        html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}
+        body{margin:0;line-height:inherit}
+        h1,h2,h3{font-size:inherit;font-weight:inherit}
+        p{margin:0}
+        ul{list-style:none;margin:0;padding:0}
+        input::-moz-placeholder{font-size:1rem;line-height:1.5rem}
+        input::placeholder{font-size:1rem;line-height:1.5rem}
+
+        /* Tailwind CSS Utilities */
+        .container{width:100%;margin-right:auto;margin-left:auto;padding-right:1rem;padding-left:1rem}
+        @media (min-width:640px){.container{max-width:640px;padding-right:1.5rem;padding-left:1.5rem}}
+        @media (min-width:768px){.container{max-width:768px;padding-right:2rem;padding-left:2rem}}
+        @media (min-width:1024px){.container{max-width:1024px}}
+        @media (min-width:1280px){.container{max-width:1280px}}
+        .relative{position:relative}
+        .absolute{position:absolute}
+        .fixed{position:fixed}
+        .inset-0{inset:0}
+        .top-0{top:0}
+        .left-0{left:0}
+        .top-6{top:1.5rem}
+        .right-6{right:1.5rem}
+        .bottom-4{bottom:1rem}
+        .right-4{right:1rem}
+        .bottom-8{bottom:2rem}
+        .right-8{right:2rem}
+        .sticky{position:sticky}
+        .z-0{z-index:0}
+        .z-10{z-index:10}
+        .z-50{z-index:50}
+        .z-100{z-index:100}
+        .z-1000{z-index:1000}
+        .mx-auto{margin-left:auto;margin-right:auto}
+        .mt-4{margin-top:1rem}
+        .mb-8{margin-bottom:2rem}
+        .mb-12{margin-bottom:3rem}
+        .mb-20{margin-bottom:5rem}
+        .mt-6{margin-top:1.5rem}
+        .mt-8{margin-top:2rem}
+        .pt-32{padding-top:8rem}
+        .flex{display:flex}
+        .grid{display:grid}
+        .h-full{height:100%}
+        .h-4{height:1rem}
+        .h-12{height:3rem}
+        .min-h-\[50vh\]{min-height:50vh}
+        .min-w-\[300px\]{min-width:300px}
+        .w-full{width:100%}
+        .w-80{width:20rem}
+        .w-150px{width:150px}
+        .w-180px{width:180px}
+        .w-60{width:15rem}
+        .w-12{width:3rem}
+        .flex-col{flex-direction:column}
+        .items-center{align-items:center}
+        .justify-center{justify-content:center}
+        .justify-between{justify-content:space-between}
+        .gap-4{gap:1rem}
+        .gap-8{gap:2rem}
+        .space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}
+        .space-y-8>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}
+        .overflow-hidden{overflow:hidden}
+        .overflow-x-hidden{overflow-x:hidden}
+        .overflow-y-auto{overflow-y:auto}
+        .rounded-full{border-radius:9999px}
+        .rounded-xl{border-radius:0.75rem}
+        .rounded-2xl{border-radius:1rem}
+        .rounded-3xl{border-radius:1.5rem}
+        .border{border-width:1px}
+        .border-2{border-width:2px}
+        .border-3{border-width:3px}
+        .border-cyan-600{--tw-border-opacity:1;border-color:rgb(8 145 178 / var(--tw-border-opacity))}
+        .bg-gray-950{--tw-bg-opacity:1;background-color:rgb(3 7 18 / var(--tw-bg-opacity))}
+        .bg-cyan-700{--tw-bg-opacity:1;background-color:rgb(21 94 117 / var(--tw-bg-opacity))}
+        .bg-purple-700{--tw-bg-opacity:1;background-color:rgb(107 33 168 / var(--tw-bg-opacity))}
+        .bg-green-700{--tw-bg-opacity:1;background-color:rgb(21 128 61 / var(--tw-bg-opacity))}
+        .bg-red-700{--tw-bg-opacity:1;background-color:rgb(185 28 28 / var(--tw-bg-opacity))}
+        .bg-gradient-to-r{background-image:linear-gradient(to right,var(--tw-gradient-stops))}
+        .from-cyan-400{--tw-gradient-from:#22d3ee var(--tw-gradient-from-position);--tw-gradient-to:rgb(34 211 238 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}
+        .from-cyan-950{--tw-gradient-from:#083344 var(--tw-gradient-from-position);--tw-gradient-to:rgb(8 51 68 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}
+        .to-purple-400{--tw-gradient-to:#c084fc var(--tw-gradient-to-position)}
+        .to-purple-950{--tw-gradient-to:#2e1065 var(--tw-gradient-to-position)}
+        .p-4{padding:1rem}
+        .p-6{padding:1.5rem}
+        .p-8{padding:2rem}
+        .px-4{padding-left:1rem;padding-right:1rem}
+        .px-6{padding-left:1.5rem;padding-right:1.5rem}
+        .py-3{padding-top:0.75rem;padding-bottom:0.75rem}
+        .px-8{padding-left:2rem;padding-right:2rem}
+        .py-4{padding-top:1rem;padding-bottom:1rem}
+        .pl-8{padding-left:2rem}
+        .text-center{text-align:center}
+        .text-2xl{font-size:1.5rem;line-height:2rem}
+        .text-3xl{font-size:1.875rem;line-height:2.25rem}
+        .text-5xl{font-size:3rem;line-height:1}
+        .text-6xl{font-size:3.75rem;line-height:1}
+        .text-lg{font-size:1.125rem;line-height:1.75rem}
+        .text-xl{font-size:1.25rem;line-height:1.75rem}
+        .font-bold{font-weight:700}
+        .text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}
+        .text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238 / var(--tw-text-opacity))}
+        .text-purple-200{--tw-text-opacity:1;color:rgb(221 214 254 / var(--tw-text-opacity))}
+        .text-purple-300{--tw-text-opacity:1;color:rgb(196 181 253 / var(--tw-text-opacity))}
+        .text-cyan-200{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity))}
+        .text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity))}
+        .text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity))}
+        .text-green-400{--tw-text-opacity:1;color:rgb(74 222 128 / var(--tw-text-opacity))}
+        .shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}
+        .backdrop-blur-md{backdrop-filter:blur(12px)}
+        .transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}
+        .transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}
+        .duration-300{transition-duration:300ms}
+        .ease-out{transition-timing-function:cubic-bezier(0, 0, 0.2, 1)}
+        .grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+        .sm\:top-8{top:2rem}
+        .sm\:right-8{right:2rem}
+        .sm\:w-180px{width:180px}
+        .sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .sm\:flex-row{flex-direction:row}
+        .md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+        .lg\:flex{display:flex}
+        .lg\:w-1\/3{width:33.333333%}
+        .lg\:flex-col{flex-direction:column}
+        .lg\:sticky{position:sticky}
+        .lg\:top-24{top:6rem}
+        .lg\:hidden{display:none}
+        .focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}
+        .focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow, 0 0 #0000)}
+        .focus\:ring-cyan-400:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(34 211 238 / var(--tw-ring-opacity))}
+        .hover\:bg-cyan-800:hover{--tw-bg-opacity:1;background-color:rgb(7 89 133 / var(--tw-bg-opacity))}
+        .hover\:bg-purple-800:hover{--tw-bg-opacity:1;background-color:rgb(88 28 135 / var(--tw-bg-opacity))}
+        .hover\:bg-green-800:hover{--tw-bg-opacity:1;background-color:rgb(22 101 52 / var(--tw-bg-opacity))}
+        .hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+        .hover\:scale-110:hover{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+        .opacity-0{opacity:0}
+        .opacity-100{opacity:1}
+        .translate-x-full{--tw-translate-x:100%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+        .translate-x-0{--tw-translate-x:0px;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+
+        /* Custom Styles */
+        body {
+            background: #000;
+            overflow-x: hidden;
+            cursor: none;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .no-webgl {
+            background: linear-gradient(45deg, #001122, #220033);
+        }
+        .no-js {
+            display: block;
+            text-align: center;
+            padding: 2rem;
+            color: #ff4444;
+            font-size: 1.5rem;
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: opacity 0.5s ease-out;
+        }
+        .holo-orb {
+            background: rgba(10, 10, 40, 0.5);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            will-change: transform, box-shadow;
+            z-index: 10;
+        }
+        .holo-orb:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+        }
+        .cosmic-button {
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff;
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            will-change: transform, box-shadow;
+            animation: cosmic-pulse 1.5s infinite;
+            z-index: 10;
+            padding: 1rem 2rem;
+            min-height: 48px;
+            min-width: 48px;
+        }
+        @keyframes cosmic-pulse {
+            0% { box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff; }
+            50% { box-shadow: 0 0 30px #00f0ff, inset 0 0 20px #00f0ff; }
+            100% { box-shadow: 0 0 15px #00f0ff, inset 0 0 10px #00f0ff; }
+        }
+        .cosmic-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+            transition: left 0.3s ease-out;
+        }
+        .cosmic-button:hover::before {
+            left: 100%;
+        }
+        .prism-glitch {
+            position: relative;
+            animation: prism-glitch 1.2s infinite alternate;
+            will-change: transform, opacity, filter;
+        }
+        @keyframes prism-glitch {
+            0% { transform: skew(0deg); opacity: 1; filter: hue-rotate(0deg); }
+            10% { transform: skew(1deg); opacity: 0.9; filter: hue-rotate(15deg); }
+            20% { transform: skew(-1deg); opacity: 0.95; filter: hue-rotate(-15deg); }
+            100% { transform: skew(0deg); opacity: 1; filter: hue-rotate(0deg); }
+        }
+        .kaleido-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0,255,255,0.15), rgba(255,0,255,0.15), transparent);
+            opacity: 0.15;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            animation: kaleido-shift 15s ease infinite;
+            z-index: 0;
+        }
+        @keyframes kaleido-shift {
+            0% { transform: scale(1) rotate(0deg); opacity: 0.15; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.25; }
+            100% { transform: scale(1) rotate(360deg); opacity: 0.15; }
+        }
+        .coin-orb canvas {
+            width: 150px !important;
+            height: 150px !important;
+            display: none;
+            margin: 0 auto;
+        }
+        .coin-orb:hover canvas {
+            display: block;
+        }
+        .trending-orb canvas, .tweet-orb canvas {
+            width: 60px !important;
+            height: 60px !important;
+        }
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .cursor-comet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+            pointer-events: none;
+            will-change: transform;
+        }
+        @keyframes liquid-metal {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes warp {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
+        .no-webgl .holo-orb {
+            animation: fallback-pulse 2s infinite;
+        }
+        @keyframes fallback-pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .accordion-header {
+            cursor: pointer;
+            padding: 0.75rem;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: background 0.3s ease;
+        }
+        .accordion-header:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+        .accordion-content {
+            display: none;
+            padding: 1rem;
+            background: rgba(10, 10, 40, 0.8);
+            border-radius: 0.5rem;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 255, 255, 0.3);
+            border-top: 4px solid #00f0ff;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .trending-widget {
+            background: rgba(10, 10, 40, 0.5);
+            backdrop-filter: blur(10px);
+            border: 2px solid;
+            border-image: linear-gradient(45deg, #00f0ff, #ff00ff) 1;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            max-height: 85vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease-out;
+        }
+        @media (max-width: 1023px) {
+            .trending-widget {
+                position: fixed;
+                inset: 0;
+                transform: translateX(100%);
+                width: 100%;
+                z-index: 100;
+            }
+            .trending-widget.active {
+                transform: translateX(0);
+            }
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(10, 10, 40, 0.8);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        .comparison-table th {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        .safety-gauge {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            margin: 0 auto;
+        }
+        .safety-gauge-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#00f0ff 0% var(--progress), #333 0% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .safety-gauge-inner {
+            width: 80%;
+            height: 80%;
+            background: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00f0ff;
+            font-weight: bold;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 255, 255, 0.9);
+            color: #000;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            z-index: 100;
+            max-width: 200px;
+            font-size: 0.875rem;
+            pointer-events: none;
+        }
+        .x-tracker-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(10, 10, 40, 0.8);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .x-tracker-table th, .x-tracker-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        .x-tracker-table th {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        .tweet-orb {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen relative">
+    <noscript>
+        <div class="no-js">JavaScript is required to view this page. Please enable JavaScript in your browser.</div>
+    </noscript>
+    <div id="loading-screen">
+        <h1 class="text-5xl font-bold text-cyan-400 prism-glitch">Fracturing Solana Multiverse...</h1>
+        <div class="w-80 h-4 bg-gray-950 mt-6 rounded-full overflow-hidden relative">
+            <div id="loading-bar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-400" style="width: 0%; transition: width 2.5s ease;"></div>
+            <div class="absolute inset-0" style="background: radial-gradient(circle, rgba(0,255,255,0.3), transparent); animation: warp 0.8s infinite;"></div>
+        </div>
+    </div>
+    <div class="kaleido-overlay"></div>
+    <canvas id="three-canvas" aria-hidden="true" style="width: 100%; height: 100%;"></canvas>
+    <header class="bg-gradient-to-r from-cyan-950 to-purple-950 p-6 sticky top-0 z-50 shadow-2xl backdrop-blur-md">
+        <div class="container mx-auto flex justify-center items-center">
+            <h1 class="text-5xl font-bold text-cyan-400 prism-glitch">Solana Meme Coin Research</h1>
+        </div>
+        <p class="text-center mt-4 text-xl text-purple-300">Explore the Multiverse of Solana with Bloop's Cosmic Launchpad</p>
+    </header>
+
+    <main class="container mx-auto pt-32 p-4 sm:p-6 md:p-8 relative z-10 min-h-screen flex lg:flex-row gap-8">
+        <!-- Trending Widget -->
+        <aside class="lg:w-1/3 lg:sticky lg:top-24 trending-widget min-w-[300px] hidden lg:flex lg:flex-col">
+            <h3 class="text-2xl font-bold text-cyan-400 mb-4">Trending Meme Coins</h3>
+            <button id="close-sidebar" class="cosmic-button bg-red-700 text-white px-4 py-2 rounded-xl hover:bg-red-800 hover:scale-105 text-lg lg:hidden mb-4">Close</button>
+            <div id="trending-coins" class="space-y-4"></div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Contract Scanning Section -->
+            <section class="mb-20 holo-orb p-8 rounded-3xl relative overflow-hidden min-h-[50vh]" id="scan-section">
+                <div class="absolute inset-0" style="background: linear-gradient(45deg, #00f0ff, #ff00ff, #00ff00); background-size: 200%; animation: liquid-metal 10s ease infinite; opacity: 0.1;"></div>
+                <h2 class="text-5xl font-bold mb-8 text-cyan-400 prism-glitch">Multiverse Contract Scanner</h2>
+                <p class="mb-8 text-purple-200 text-xl">Probe Solana contracts with AI-powered analysis for scam prevention and in-depth token insights.</p>
+                <div class="space-y-8">
+                    <input
+                        id="contractAddress"
+                        type="text"
+                        placeholder="Enter Solana token contract address"
+                        class="w-full p-4 bg-gray-950 border border-cyan-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white text-xl transition duration-300 ease-out"
+                        aria-label="Solana token contract address"
+                    >
+                    <button
+                        id="scanButton"
+                        class="cosmic-button bg-cyan-700 text-white px-8 py-4 rounded-2xl hover:bg-cyan-800 hover:scale-105 text-xl"
+                        role="button"
+                        aria-label="Scan contract"
+                        tabindex="0"
+                        onclick="scanContract()"
+                    >
+                        Engage Quantum Scan
+                    </button>
+                    <div id="scanResults" class="mt-8 text-purple-200 text-xl"></div>
+                </div>
+            </section>
+
+            <!-- Bloop Launchpad Section -->
+            <section class="mb-20 holo-orb p-8 rounded-3xl relative overflow-hidden min-h-[50vh]" id="bloop-section">
+                <div class="absolute inset-0" style="background: linear-gradient(45deg, #ff00ff, #00f0ff, #00ff00); background-size: 200%; animation: liquid-metal 10s infinite; opacity: 0.1;"></div>
+                <canvas id="portal-canvas" class="absolute top-6 right-6 sm:top-8 sm:right-8 w-150px sm:w-180px h-150px sm:h-180px" aria-hidden="true"></canvas>
+                <h2 class="text-5xl font-bold mb-8 text-purple-400 prism-glitch">Bloop: Cosmic Launchpad</h2>
+                <p class="mb-8 text-cyan-200 text-xl">
+                    Bloop catapults Solana tokens into alternate realities with multidimensional launch protocols.
+                </p>
+                <ul class="list-disc pl-8 mb-8 text-cyan-200 text-xl">
+                    <li>Multiverse Hyperlaunch for instant token transcendence</li>
+                    <li>Quantum presale nexus for cosmic crowdfunding</li>
+                    <li>Interdimensional community protocols for stellar unity</li>
+                </ul>
+                <a
+                    href="https://bloop.launchpad"
+                    target="_blank"
+                    class="cosmic-button bg-purple-700 text-white px-8 py-4 rounded-2xl hover:bg-purple-800 hover:scale-105 text-xl"
+                    role="button"
+                    aria-label="Visit Bloop Launchpad"
+                    tabindex="0"
+                >
+                    Enter Bloop Multiverse
+                </a>
+            </section>
+
+            <!-- Top Solana Meme Coins Section -->
+            <section id="coins-section" class="mb-20 min-h-[50vh]">
+                <h2 class="text-5xl font-bold mb-8 text-cyan-400 prism-glitch">Stellar Meme Coins</h2>
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-purple-300 mb-4">Compare Tokens</h3>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input
+                            id="compareToken1"
+                            type="text"
+                            placeholder="Enter first token address"
+                            class="w-full p-4 bg-gray-950 border border-cyan-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white text-lg"
+                            aria-label="First token address for comparison"
+                        >
+                        <input
+                            id="compareToken2"
+                            type="text"
+                            placeholder="Enter second token address"
+                            class="w-full p-4 bg-gray-950 border border-cyan-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white text-lg"
+                            aria-label="Second token address for comparison"
+                        >
+                        <button
+                            id="compareButton"
+                            class="cosmic-button bg-cyan-700 text-white px-8 py-4 rounded-2xl hover:bg-cyan-800 hover:scale-105 text-lg"
+                            role="button"
+                            aria-label="Compare tokens"
+                            tabindex="0"
+                            onclick="compareTokens()"
+                        >
+                            Compare
+                        </button>
+                    </div>
+                    <div id="comparisonResults" class="mt-8"></div>
+                </div>
+                <div id="memeCoins" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"></div>
+            </section>
+
+            <!-- X Sentiment Tracker Section -->
+            <section id="x-tracker-section" class="mb-20 holo-orb p-8 rounded-3xl relative overflow-hidden min-h-[50vh]">
+                <div class="absolute inset-0" style="background: linear-gradient(45deg, #00f0ff, #ff00ff, #00ff00); background-size: 200%; animation: liquid-metal 10s ease infinite; opacity: 0.1;"></div>
+                <h2 class="text-5xl font-bold mb-8 text-cyan-400 prism-glitch">X Sentiment Tracker</h2>
+                <p class="mb-8 text-purple-200 text-xl">Monitor trending posts from notable crypto traders discussing Solana meme coins.</p>
+                <div id="x-tracker" class="x-tracker-table"></div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-gradient-to-r from-cyan-950 to-purple-950 p-6 text-center relative z-50 backdrop-blur-md">
+        <p class="text-purple-200 text-xl">© 2025 Solana Meme Coin Research. Powered by Multiversal Blockchain Nexus.</p>
+        <div class="absolute inset-0" style="background: linear-gradient(45deg, #00f0ff, #ff00ff); background-size: 200%; animation: liquid-metal 10s ease infinite; opacity: 0.1;"></div>
+    </footer>
+
+    <button
+        id="backToTop"
+        class="cosmic-button fixed bottom-4 right-4 bg-cyan-700 text-white px-6 py-3 rounded-full hover:bg-cyan-800 hover:scale-110 text-lg opacity-0 transition duration-300"
+        role="button"
+        aria-label="Back to top"
+        tabindex="0"
+    >
+        ↑
+    </button>
+    <button
+        id="toggle-trending"
+        class="cosmic-button fixed bottom-8 right-8 bg-cyan-700 text-white w-12 h-12 rounded-full hover:bg-cyan-800 hover:scale-110 text-lg flex items-center justify-center lg:hidden"
+        role="button"
+        aria-label="Toggle trending widget"
+        tabindex="0"
+    >
+        ☰
+    </button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+    <script>
+        // DOM Cache
+        const DOM = {
+            loadingScreen: document.getElementById('loading-screen'),
+            loadingBar: document.getElementById('loading-bar'),
+            threeCanvas: document.getElementById('three-canvas'),
+            contractAddress: document.getElementById('contractAddress'),
+            scanButton: document.getElementById('scanButton'),
+            scanResults: document.getElementById('scanResults'),
+            portalCanvas: document.getElementById('portal-canvas'),
+            memeCoins: document.getElementById('memeCoins'),
+            backToTop: document.getElementById('backToTop'),
+            compareToken1: document.getElementById('compareToken1'),
+            compareToken2: document.getElementById('compareToken2'),
+            compareButton: document.getElementById('compareButton'),
+            comparisonResults: document.getElementById('comparisonResults'),
+            trendingCoins: document.getElementById('trending-coins'),
+            toggleTrending: document.getElementById('toggle-trending'),
+            closeSidebar: document.getElementById('close-sidebar'),
+            xTracker: document.getElementById('x-tracker'),
+            scanSection: document.getElementById('scan-section')
+        };
+
+        // Utility: Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Utility: WebGL Detection
+        function isWebGLAvailable() {
+            try {
+                const canvas = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+            } catch (e) {
+                console.warn('WebGL not supported. Falling back to 2D animations.');
+                document.body.classList.add('no-webgl');
+                return false;
+            }
+        }
+
+        // Loading Screen Animation
+        if (window.gsap) {
+            gsap.to(DOM.loadingBar, {
+                width: "100%",
+                duration: 2.5,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    gsap.to(DOM.loadingScreen, {
+                        opacity: 0,
+                        duration: 0.4,
+                        ease: "power2.out",
+                        onComplete: () => {
+                            DOM.loadingScreen.style.display = "none";
+                        }
+                    });
+                }
+            });
+        } else {
+            setTimeout(() => {
+                DOM.loadingScreen.style.display = "none";
+            }, 2500);
+        }
+
+        // Initialize 3D Multiverse Hub
+        function init3DMultiverse() {
+            if (!window.THREE || !isWebGLAvailable()) {
+                document.body.classList.add('no-webgl');
+                return;
+            }
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: DOM.threeCanvas, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio, 2));
+
+            scene.fog = new THREE.FogExp2(0x000000, 0.005);
+            camera.position.z = 50;
+
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleMaterial = new THREE.PointsMaterial({ color: 0x00f0ff, size: 0.1, transparent: true, opacity: 0.3 });
+            const particleVertices = new Float32Array(500 * 3);
+            for (let i = 0; i < 500 * 3; i += 3) {
+                particleVertices[i] = (Math.random() - 0.5) * 100;
+                particleVertices[i + 1] = (Math.random() - 0.5) * 100;
+                particleVertices[i + 2] = (Math.random() - 0.5) * 100;
+            }
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(particleVertices, 3));
+            const particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
+            scene.add(ambientLight);
+
+            let lastTime = 0;
+            function animate(time) {
+                const delta = (time - lastTime) / 1000;
+                lastTime = time;
+                requestAnimationFrame(animate);
+                particles.rotation.y += delta * 0.05;
+                particles.position.y = window.scrollY * 0.01;
+                renderer.render(scene, camera);
+            }
+            requestAnimationFrame(animate);
+
+            const handleResize = debounce(() => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }, 16);
+            window.addEventListener('resize', handleResize);
+
+            const handleScroll = debounce(() => {
+                const scrollY = window.scrollY;
+                const opacity = Math.max(0.5, 0.8 - scrollY / 2000);
+                DOM.threeCanvas.style.opacity = opacity;
+            }, 16);
+            window.addEventListener('scroll', handleScroll);
+        }
+
+        // Initialize 3D Coin Orbs
+        function init3DCoin(card, size = 150) {
+            if (!window.THREE || !isWebGLAvailable()) return;
+            const canvas = card.querySelector('canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+            renderer.setSize(size, size);
+
+            const geometry = new THREE.IcosahedronGeometry(size === 150 ? 1.5 : size === 60 ? 0.6 : 0.5, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+            const orb = new THREE.Mesh(geometry, material);
+            scene.add(orb);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
+            scene.add(ambientLight);
+            camera.position.z = size === 150 ? 4 : 2;
+
+            let lastTime = 0;
+            function animate(time) {
+                const delta = (time - lastTime) / 1000;
+                lastTime = time;
+                requestAnimationFrame(animate);
+                orb.rotation.y += delta * 0.5;
+                renderer.render(scene, camera);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize 3D Bloop Portal
+        function initBloopPortal() {
+            if (!window.THREE || !isWebGLAvailable()) return;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: DOM.portalCanvas, alpha: true });
+            renderer.setSize(150, 150);
+
+            const portalGeometry = new THREE.RingGeometry(1, 2, 24);
+            const portalMaterial = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true });
+            const portal = new THREE.Mesh(portalGeometry, portalMaterial);
+            scene.add(portal);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
+            scene.add(ambientLight);
+            camera.position.z = 5;
+
+            let lastTime = 0;
+            function animate(time) {
+                const delta = (time - lastTime) / 1000;
+                lastTime = time;
+                requestAnimationFrame(animate);
+                portal.rotation.z += delta * 0.5;
+                renderer.render(scene, camera);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Cursor Comet
+        function initCursorComet() {
+            const comet = document.createElement('div');
+            comet.className = 'cursor-comet';
+            comet.style.color = '#00f0ff';
+            document.body.appendChild(comet);
+
+            const moveComet = (x, y) => {
+                comet.style.transform = `translate(${x - 4}px, ${y - 4}px)`;
+            };
+
+            document.addEventListener('mousemove', (e) => moveComet(e.clientX, e.clientY));
+            document.addEventListener('touchmove', (e) => moveComet(e.touches[0].clientX, e.touches[0].clientY));
+        }
+
+        // Onboarding Tooltip
+        function initOnboardingTooltip() {
+            if (localStorage.getItem('onboardingCompleted')) return;
+
+            const tooltips = [
+                { element: DOM.scanSection, text: 'Enter a Solana token address here to scan for scams and insights.', position: 'bottom' },
+                { element: DOM.compareButton, text: 'Compare two tokens side-by-side for quick analysis.', position: 'top' },
+                { element: DOM.trendingCoins, text: 'Check trending meme coins with real-time data.', position: 'right' },
+                { element: DOM.xTracker, text: 'See what top traders are saying about Solana meme coins on X.', position: 'top' }
+            ];
+
+            let currentTooltipIndex = 0;
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            document.body.appendChild(tooltip);
+
+            function showTooltip(index) {
+                if (index >= tooltips.length) {
+                    tooltip.remove();
+                    localStorage.setItem('onboardingCompleted', 'true');
+                    return;
+                }
+                const { element, text, position } = tooltips[index];
+                const rect = element.getBoundingClientRect();
+                tooltip.textContent = text;
+                let top, left;
+                if (position === 'bottom') {
+                    top = rect.bottom + window.scrollY + 10;
+                    left = rect.left + rect.width / 2 + window.scrollX;
+                } else if (position === 'top') {
+                    top = rect.top + window.scrollY - 40;
+                    left = rect.left + rect.width / 2 + window.scrollX;
+                } else if (position === 'right') {
+                    top = rect.top + rect.height / 2 + window.scrollY;
+                    left = rect.right + window.scrollX + 10;
+                }
+                tooltip.style.top = `${top}px`;
+                tooltip.style.left = `${left}px`;
+                tooltip.style.transform = position === 'bottom' || position === 'top' ? 'translateX(-50%)' : '';
+                tooltip.style.opacity = 1;
+            }
+
+            tooltip.addEventListener('click', () => {
+                tooltip.style.opacity = 0;
+                setTimeout(() => {
+                    currentTooltipIndex++;
+                    showTooltip(currentTooltipIndex);
+                }, 300);
+            });
+
+            showTooltip(currentTooltipIndex);
+        }
+
+        // Fetch Meme Coin Data
+        async function fetchMemeCoins() {
+            try {
+                return [
+                    { name: "FARTCOIN", symbol: "FART", market_cap: "$1.2B", current_price: "$1.20", safety_score: 70 },
+                    { name: "Dogwifhat", symbol: "WIF", market_cap: "$1.2B", current_price: "$0.012", safety_score: 90 },
+                    { name: "Popcat", symbol: "POPCAT", market_cap: "$1.5B", current_price: "$0.015", safety_score: 85 }
+                ];
+            } catch (error) {
+                console.error('Error fetching meme coins:', error);
+                return [];
+            }
+        }
+
+        // Fetch Trending Coins
+        async function fetchTrendingCoins() {
+            try {
+                return [
+                    { name: "BONK", symbol: "BONK", price_change_24h: "+15.2%", volume_24h: "$25M" },
+                    { name: "WIF", symbol: "WIF", price_change_24h: "+8.7%", volume_24h: "$40M" },
+                    { name: "PNUT", symbol: "PNUT", price_change_24h: "+105%", volume_24h: "$30M" }
+                ];
+            } catch (error) {
+                console.error('Error fetching trending coins:', error);
+                return [];
+            }
+        }
+
+        // Fetch X Sentiment Data
+        async function fetchXSentiment() {
+            try {
+                return [
+                    {
+                        handle: "@CryptoWhaleWatcher",
+                        content: "$FARTCOIN just hit $1.20! Whale wallet bought 1M tokens on Raydium.",
+                        timestamp: "May 1, 2025, 2:30 PM EDT",
+                        engagement: "1.2K Likes, 450 Reposts"
+                    },
+                    {
+                        handle: "@MemeCoinSniper",
+                        content: "$TRUMP at $0.10, $9B market cap. Insider wallets selling.",
+                        timestamp: "May 1, 2025, 1:45 PM EDT",
+                        engagement: "980 Likes, 320 Reposts"
+                    },
+                    {
+                        handle: "@DexGuru",
+                        content: "$POPCAT up 105% to $0.015! Watch liquidity pools.",
+                        timestamp: "May 1, 2025, 12:10 PM EDT",
+                        engagement: "2.3K Likes, 670 Reposts"
+                    },
+                    {
+                        handle: "@SolanaShill",
+                        content: "$MELANIA crashed to $4.48. Stick to $WIF or $BONK.",
+                        timestamp: "May 1, 2025, 11:20 AM EDT",
+                        engagement: "750 Likes, 200 Reposts"
+                    },
+                    {
+                        handle: "@ChainSleuth",
+                        content: "$WIF at $0.012, solid liquidity. Safe bet for now.",
+                        timestamp: "May 1, 2025, 10:05 AM EDT",
+                        engagement: "1.5K Likes, 510 Reposts"
+                    }
+                ];
+            } catch (error) {
+                console.error('Error fetching X sentiment:', error);
+                return [];
+            }
+        }
+
+        // Scan Contract
+        async function scanContract() {
+            const address = DOM.contractAddress.value.trim();
+            if (!address) {
+                DOM.scanResults.innerHTML = "<p class='text-red-400'>Please enter a contract address.</p>";
+                return;
+            }
+
+            DOM.scanResults.innerHTML = '<div class="spinner"></div>';
+            try {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                const safetyScore = Math.floor(Math.random() * 100);
+                const riskLevel = safetyScore > 80 ? 'Low' : safetyScore > 50 ? 'Medium' : 'High';
+                const color = safetyScore > 80 ? 'green-400' : safetyScore > 50 ? 'yellow-400' : 'red-400';
+                DOM.scanResults.innerHTML = `
+                    <div class="accordion-header">Scan Results for ${address.slice(0, 6)}...${address.slice(-4)}</div>
+                    <div class="accordion-content active">
+                        <p class="text-lg">Safety Score: <span class="text-${color}">${safetyScore}</span></p>
+                        <p class="text-lg">Risk Level: <span class="text-${color}">${riskLevel}</span></p>
+                        <p class="text-lg">Details: No mint authority detected. Liquidity pool stable.</p>
+                        <div class="safety-gauge" style="--progress: ${safetyScore}%">
+                            <div class="safety-gauge-circle">
+                                <div class="safety-gauge-inner">${safetyScore}%</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 mt-4">
+                            <button class="cosmic-button bg-green-700 text-white px-4 py-2 rounded-xl hover:bg-green-800 hover:scale-105" onclick="saveScan('${address}', ${safetyScore})">Save Scan</button>
+                            <button class="cosmic-button bg-purple-700 text-white px-4 py-2 rounded-xl hover:bg-purple-800 hover:scale-105" onclick="shareScan('${address}', ${safetyScore})">Share Scan</button>
+                        </div>
+                    </div>
+                `;
+                const header = DOM.scanResults.querySelector('.accordion-header');
+                const content = DOM.scanResults.querySelector('.accordion-content');
+                header.addEventListener('click', () => {
+                    content.classList.toggle('active');
+                });
+            } catch (error) {
+                DOM.scanResults.innerHTML = "<p class='text-red-400'>Error scanning contract. Please try again.</p>";
+            }
+        }
+
+        // Save Scan
+        function saveScan(address, score) {
+            const scans = JSON.parse(localStorage.getItem('savedScans') || '[]');
+            scans.push({ address, score, date: new Date().toISOString() });
+            localStorage.setItem('savedScans', JSON.stringify(scans));
+            alert('Scan saved successfully!');
+        }
+
+        // Share Scan
+        function shareScan(address, score) {
+            const text = `Scanned Solana token ${address} with a safety score of ${score}%! Check it out on Solana Meme Coin Research.`;
+            if (navigator.share) {
+                navigator.share({ title: 'Solana Token Scan', text, url: window.location.href });
+            } else {
+                navigator.clipboard.writeText(text);
+                alert('Scan details copied to clipboard!');
+            }
+        }
+
+        // Compare Tokens
+        async function compareTokens() {
+            const token1 = DOM.compareToken1.value.trim();
+            const token2 = DOM.compareToken2.value.trim();
+            if (!token1 || !token2) {
+                DOM.comparisonResults.innerHTML = "<p class='text-red-400'>Please enter two token addresses to compare.</p>";
+                return;
+            }
+
+            DOM.comparisonResults.innerHTML = '<div class="spinner"></div>';
+            try {
+                const mockTokens = [
+                    { address: "FARTCOIN_ADDRESS", name: "FARTCOIN", symbol: "FART", market_cap: "$1.2B", current_price: "$1.20", safety_score: 70 },
+                    { address: "WIF_ADDRESS", name: "Dogwifhat", symbol: "WIF", market_cap: "$1.2B", current_price: "$0.012", safety_score: 90 },
+                    { address: "POPCAT_ADDRESS", name: "Popcat", symbol: "POPCAT", market_cap: "$1.5B", current_price: "$0.015", safety_score: 85 },
+                    { address: "TRUMP_ADDRESS", name: "TRUMP", symbol: "TRUMP", market_cap: "$9B", current_price: "$0.10", safety_score: 60 },
+                    { address: "MELANIA_ADDRESS", name: "MELANIA", symbol: "MELANIA", market_cap: "$500M", current_price: "$4.48", safety_score: 40 }
+                ];
+
+                const tokenData1 = mockTokens.find(t => t.address === token1) || mockTokens[0];
+                const tokenData2 = mockTokens.find(t => t.address === token2) || mockTokens[1];
+
+                if (!tokenData1 || !tokenData2) {
+                    DOM.comparisonResults.innerHTML = "<p class='text-red-400'>Invalid token addresses. Please try again.</p>";
+                    return;
+                }
+
+                DOM.comparisonResults.innerHTML = `
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>${tokenData1.name}</th>
+                                <th>${tokenData2.name}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Symbol</td>
+                                <td>${tokenData1.symbol}</td>
+                                <td>${tokenData2.symbol}</td>
+                            </tr>
+                            <tr>
+                                <td>Price</td>
+                                <td>${tokenData1.current_price}</td>
+                                <td>${tokenData2.current_price}</td>
+                            </tr>
+                            <tr>
+                                <td>Market Cap</td>
+                                <td>${tokenData1.market_cap}</td>
+                                <td>${tokenData2.market_cap}</td>
+                            </tr>
+                            <tr>
+                                <td>Safety Score</td>
+                                <td>${tokenData1.safety_score}%</td>
+                                <td>${tokenData2.safety_score}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                DOM.comparisonResults.innerHTML = "<p class='text-red-400'>Error comparing tokens. Please try again.</p>";
+            }
+        }
+
+        // Render Meme Coins
+        async function renderMemeCoins() {
+            const coins = await fetchMemeCoins();
+            DOM.memeCoins.innerHTML = coins.map(coin => `
+                <div class="coin-orb holo-orb p-6 rounded-2xl relative">
+                    <canvas aria-hidden="true"></canvas>
+                    <h3 class="text-xl font-bold text-cyan-400">${coin.name}</h3>
+                    <p class="text-lg text-purple-200">Symbol: ${coin.symbol}</p>
+                    <p class="text-lg text-purple-200">Price: ${coin.current_price}</p>
+                    <p class="text-lg text-purple-200">Market Cap: ${coin.market_cap}</p>
+                    <p class="text-lg text-purple-200">Safety Score: ${coin.safety_score}%</p>
+                </div>
+            `).join('');
+            DOM.memeCoins.querySelectorAll('.coin-orb').forEach(card => init3DCoin(card));
+        }
+
+        // Render Trending Coins
+        async function renderTrendingCoins() {
+            const coins = await fetchTrendingCoins();
+            DOM.trendingCoins.innerHTML = coins.map(coin => `
+                <div class="trending-orb holo-orb p-4 rounded-xl flex items-center gap-4">
+                    <canvas aria-hidden="true"></canvas>
+                    <div>
+                        <h4 class="text-xl font-bold text-cyan-400">${coin.name}</h4>
+                        <p class="text-lg text-purple-200">Symbol: ${coin.symbol}</p>
+                        <p class="text-lg text-purple-200">24h Change: ${coin.price_change_24h}</p>
+                        <p class="text-lg text-purple-200">Volume: ${coin.volume_24h}</p>
+                    </div>
+                </div>
+            `).join('');
+            DOM.trendingCoins.querySelectorAll('.trending-orb').forEach(card => init3DCoin(card, 60));
+        }
+
+        // Render X Sentiment Tracker
+        async function renderXSentiment() {
+            const posts = await fetchXSentiment();
+            DOM.xTracker.innerHTML = `
+                <table class="x-tracker-table">
+                    <thead>
+                        <tr>
+                            <th>Trader</th>
+                            <th>Post</th>
+                            <th>Time</th>
+                            <th>Engagement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${posts.map(post => `
+                            <tr>
+                                <td class="tweet-orb">
+                                    <canvas aria-hidden="true"></canvas>
+                                    ${post.handle}
+                                </td>
+                                <td>${post.content}</td>
+                                <td>${post.timestamp}</td>
+                                <td>${post.engagement}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            DOM.xTracker.querySelectorAll('.tweet-orb').forEach(card => init3DCoin(card, 60));
+        }
+
+        // Back to Top Button
+        function initBackToTop() {
+            window.addEventListener('scroll', debounce(() => {
+                DOM.backToTop.style.opacity = window.scrollY > 300 ? 1 : 0;
+            }, 16));
+            DOM.backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Toggle Trending Widget
+        function initToggleTrending() {
+            DOM.toggleTrending.addEventListener('click', () => {
+                DOM.trendingCoins.parentElement.classList.toggle('active');
+                DOM.trendingCoins.parentElement.classList.remove('hidden');
+            });
+            if (DOM.closeSidebar) {
+                DOM.closeSidebar.addEventListener('click', () => {
+                    DOM.trendingCoins.parentElement.classList.remove('active');
+                    DOM.trendingCoins.parentElement.classList.add('hidden');
+                });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            init3DMultiverse();
+            initBloopPortal();
+            initCursorComet();
+            initOnboardingTooltip();
+            renderMemeCoins();
+            renderTrendingCoins();
+            renderXSentiment();
+            initBackToTop();
+            initToggleTrending();
+        });
+    </script>
+</body>
+</html>
