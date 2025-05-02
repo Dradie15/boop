@@ -1,0 +1,315 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Meme Coin Research</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #000;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+        body.nebula-theme {
+            background: #1a202c;
+        }
+        body.high-contrast {
+            background: #000;
+            color: #00f0ff;
+        }
+        .no-js {
+            display: block;
+            text-align: center;
+            padding: 2rem;
+            color: #ff4444;
+            font-size: 1.5rem;
+        }
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            transition: opacity 0.5s ease;
+            animation: hideAfterDelay 5s forwards;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+        @keyframes hideAfterDelay {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+        .holo-orb {
+            background: rgba(10, 10, 40, 0.6);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            transition: transform 0.3s ease-out;
+        }
+        .holo-orb:hover {
+            transform: translateY(-10px);
+        }
+        .cosmic-button {
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 20px #00f0ff;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease-out;
+            min-height: 48px;
+            min-width: 48px;
+            touch-action: manipulation;
+        }
+        .cosmic-button:hover {
+            box-shadow: 0 0 30px #00f0ff;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 255, 255, 0.3);
+            border-top: 4px solid #00f0ff;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        header {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 40;
+            transition: transform 0.3s ease;
+        }
+        header.hidden {
+            transform: translateY(-100%);
+        }
+        main {
+            padding-top: var(--header-height, 8rem);
+            min-height: calc(100vh - var(--header-height, 8rem));
+        }
+        .section {
+            display: none;
+            padding: 2rem;
+        }
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: rgba(10, 10, 40, 0.95);
+            border: 2px solid #00f0ff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .error-message {
+            background: rgba(255, 68, 68, 0.8);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem auto;
+            text-align: center;
+            max-width: 90%;
+        }
+        @media (max-width: 640px) {
+            header {
+                padding: 0.5rem;
+            }
+            h1, h2 {
+                font-size: 1.5rem;
+            }
+            .cosmic-button {
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <noscript>
+        <div class="no-js">JavaScript is required to view this page.</div>
+    </noscript>
+    <div id="loading-screen">
+        <h1 class="text-4xl font-bold text-cyan-400">Fracturing Solana Multiverse...</h1>
+        <div class="spinner mt-4"></div>
+    </div>
+    <header id="header" class="bg-gradient-to-r from-cyan-950 to-purple-950 p-4 shadow-2xl">
+        <div class="container mx-auto flex flex-wrap justify-between items-center gap-4">
+            <h1 class="text-3xl font-bold text-cyan-400">Solana Meme Coin Research</h1>
+            <nav class="flex gap-2 flex-wrap">
+                <button id="home-btn" class="cosmic-button bg-blue-700 text-white px-3 py-1 rounded-lg text-base" aria-label="Show Home section">Home</button>
+                <button id="coin-launches-btn" class="cosmic-button bg-blue-700 text-white px-3 py-1 rounded-lg text-base" aria-label="Show Coin Launches section">Coin Launches</button>
+                <button id="theme-toggle" class="cosmic-button bg-purple-700 text-white px-3 py-1 rounded-lg text-base" aria-label="Toggle theme">Nebula Theme</button>
+                <button id="live-data-toggle" class="cosmic-button bg-green-700 text-white px-3 py-1 rounded-lg text-base" aria-label="Toggle live data">Live Data: Off</button>
+            </nav>
+        </div>
+        <p class="text-center mt-2 text-base text-purple-300">Powered by xAI's Grok AI Ultra Max</p>
+    </header>
+
+    <div id="insights-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close text-2xl text-cyan-400 float-right" aria-label="Close modal">×</button>
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Grok AI Ultra Max Insights</h2>
+            <div id="insights-content" class="text-lg text-purple-200"></div>
+        </div>
+    </div>
+
+    <div id="alerts-container" class="fixed top-4 right-4 space-y-4 z-50" aria-live="polite"></div>
+
+    <main id="main-content" class="container mx-auto p-4">
+        <section id="home-section" class="section active holo-orb p-6 rounded-2xl">
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Welcome to Solana Meme Coin Research</h2>
+            <p class="text-lg text-purple-200 mb-4">Explore the latest Solana meme coins with advanced analytics.</p>
+            <button class="cosmic-button bg-green-700 text-white px-4 py-2 rounded-lg" onclick="startResearch()">Start Research</button>
+
+            <div class="holo-orb p-6 rounded-2xl mt-8">
+                <h2 class="text-3xl font-bold text-cyan-400 mb-4">Token Price Trends</h2>
+                <select id="chart-token" class="w-full p-2 bg-gray-950 border border-cyan-600 rounded-lg text-white mb-4" aria-label="Select token for price chart">
+                    <option value="FARTCOIN">FARTCOIN</option>
+                    <option value="WIF">Dogwifhat (WIF)</option>
+                    <option value="POPCAT">Popcat (POPCAT)</option>
+                </select>
+                <canvas id="price-chart" class="bg-gray-900 p-4 rounded-lg"></canvas>
+                <p id="chart-timestamp" class="text-sm text-purple-300 mt-2">Data loading...</p>
+            </div>
+
+            <div class="holo-orb p-6 rounded-2xl mt-8">
+                <h2 class="text-3xl font-bold text-cyan-400 mb-4">Contract Scanner</h2>
+                <input id="contractAddress" type="text" placeholder="Enter Solana token contract address" class="w-full p-2 bg-gray-950 border border-cyan-600 rounded-lg text-white mb-4" aria-label="Solana token contract address">
+                <div class="flex gap-4 flex-wrap">
+                    <button id="scanButton" class="cosmic-button bg-cyan-700 text-white px-4 py-2 rounded-lg" aria-label="Initiate contract scan">Scan Contract</button>
+                    <button id="insightsButton" class="cosmic-button bg-purple-700 text-white px-4 py-2 rounded-lg hidden" aria-label="View Grok AI Ultra Max insights">AI Insights</button>
+                </div>
+                <div id="scanResults" class="mt-4 text-purple-200" aria-live="polite"></div>
+                <p id="scan-timestamp" class="text-sm text-purple-300 mt-2">Awaiting scan...</p>
+            </div>
+
+            <div class="holo-orb p-6 rounded-2xl mt-8">
+                <h2 class="text-3xl font-bold text-cyan-400 mb-4">Dark Pool Scanner</h2>
+                <p class="mb-4 text-purple-200 text-base">Detect large wallet transactions with Grok AI Ultra Max Dark Pool Insights.</p>
+                <div class="flex gap-4 mb-4">
+                    <button id="refresh-dark-pool" class="cosmic-button bg-cyan-700 text-white px-4 py-2 rounded-lg text-base" aria-label="Refresh dark pool data">Refresh</button>
+                    <button id="retry-dark-pool" class="cosmic-button bg-red-700 text-white px-4 py-2 rounded-lg text-base hidden" aria-label="Retry dark pool scan">Retry</button>
+                </div>
+                <div id="dark-pool-results" class="x-tracker-table" aria-label="Dark pool transaction table"></div>
+                <p id="dark-pool-timestamp" class="text-sm text-purple-300 mt-2">Data loading...</p>
+            </div>
+
+            <div class="holo-orb p-6 rounded-2xl mt-8">
+                <div class="section-toggle">
+                    <h2 class="text-3xl font-bold text-cyan-400">X Sentiment Tracker</h2>
+                </div>
+                <div class="section-content">
+                    <p class="mb-4 text-purple-200 text-base">Monitor live X sentiment with Grok AI Ultra Max.</p>
+                    <div class="flex gap-4 mb-4">
+                        <button id="refresh-x-tracker" class="cosmic-button bg-cyan-700 text-white px-4 py-2 rounded-lg text-base" aria-label="Refresh X posts">Refresh Posts</button>
+                        <button id="retry-x-tracker" class="cosmic-button bg-red-700 text-white px-4 py-2 rounded-lg text-base hidden" aria-label="Retry X tracker">Retry Tracker</button>
+                    </div>
+                    <div id="x-tracker" class="x-tracker-table" aria-label="X sentiment tracker table"></div>
+                    <p id="x-tracker-timestamp" class="text-sm text-purple-300 mt-2">Data loading...</p>
+                </div>
+            </div>
+
+            <aside id="sidebar" class="fixed right-4 top-24 w-64 p-4 bg-gray-900 rounded-lg shadow-lg z-30">
+                <h3 class="text-xl font-bold text-cyan-400 mb-4">Watchlist & Trends</h3>
+                <div id="watchlist" class="mb-4 text-purple-200"></div>
+                <div id="trending-coins" class="text-purple-200"></div>
+            </aside>
+        </section>
+
+        <section id="coin-launches-section" class="section holo-orb p-6 rounded-2xl">
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">New Coin Launches</h2>
+            <p class="text-lg text-purple-200 mb-4">Discover the latest meme coins on Solana.</p>
+            <div id="coin-launches-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+    </main>
+
+    <footer class="bg-gradient-to-r from-cyan-950 to-purple-950 p-6 text-center">
+        <p class="text-purple-200 text-base">© 2025 Solana Meme Coin Research. Powered by xAI's Grok AI Ultra Max.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
