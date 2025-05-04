@@ -1,0 +1,1396 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Metaverse - Meme Coins</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(180deg, #0a0a1f 0%, #1a1a3b 100%);
+      color: #e0e0ff;
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      overflow-x: hidden;
+      position: relative;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Exo 2', sans-serif;
+      color: #ffffff;
+      text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    .neon-glow {
+      box-shadow: 0 0 10px #3b82f6, 0 0 20px #8b5cf6;
+    }
+    .gradient-border {
+      border: 2px solid;
+      border-image: linear-gradient(45deg, #3b82f6, #8b5cf6) 1;
+    }
+    .flat-button {
+      transition: background-color 0.3s, color 0.3s, transform 0.3s;
+    }
+    .flat-button:hover {
+      transform: scale(1.05);
+      background-color: #3b82f6;
+      color: #ffffff;
+    }
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0a1f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #3b82f6;
+      border-top: 5px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1a1a3b;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 400px;
+      border: 1px solid #3b82f6;
+    }
+    .scroll-to-top {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #3b82f6;
+      color: #ffffff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.3s;
+    }
+    .scroll-to-top:hover {
+      transform: scale(1.1);
+    }
+    .scroll-to-top.hidden {
+      opacity: 0;
+    }
+    .ticker {
+      background: #1a1a3b;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0.5rem 0;
+      position: fixed;
+      top: 64px;
+      width: 100%;
+      z-index: 10;
+      border-bottom: 1px solid #3b82f6;
+    }
+    .ticker-content {
+      display: inline-block;
+      animation: ticker 20s linear infinite;
+    }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip .tooltip-text {
+      visibility: hidden;
+      width: 120px;
+      background: #1a1a3b;
+      color: #e0e0ff;
+      text-align: center;
+      padding: 5px;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      border: 1px solid #3b82f6;
+    }
+    .tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+    .meme-coin-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      background: #3b82f6;
+      box-shadow: 0 0 10px #3b82f6;
+    }
+    .card {
+      background: #1a1a3b;
+      border: 1px solid #3b82f6;
+      border-radius: 0.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px #3b82f6;
+    }
+    .starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      background: url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+      opacity: 0.3;
+    }
+    .theme-space {
+      background: linear-gradient(180deg, #0a0a1f 0%, #1a1a3b 100%);
+      color: #e0e0ff;
+    }
+    .theme-light {
+      background: linear-gradient(180deg, #e0e0e0 0%, #f0f0f0 100%);
+      color: #1a2526;
+    }
+    .theme-light .bg-gray-900 {
+      background: #d0d0d0;
+    }
+    .theme-light .bg-gray-800 {
+      background: #c0c0c0;
+    }
+    .theme-light .bg-gray-700 {
+      background: #b0b0b0;
+    }
+    .theme-light .text-white {
+      color: #1a2526;
+    }
+    .theme-light .text-gray-400 {
+      color: #666;
+    }
+    .theme-light .text-gray-300 {
+      color: #555;
+    }
+    .theme-light .text-blue-400 {
+      color: #3b82f6;
+    }
+    .theme-light .text-green-400 {
+      color: #2ecc71;
+    }
+    .theme-light .text-red-400 {
+      color: #e74c3c;
+    }
+    .theme-cyberpunk {
+      background: linear-gradient(180deg, #0a001f 0%, #1a0b3b 100%);
+      color: #ff6bd6;
+    }
+    .theme-cyberpunk .bg-gray-900 {
+      background: #2a1a5b;
+    }
+    .theme-cyberpunk .bg-gray-800 {
+      background: #3a2a7b;
+    }
+    .theme-cyberpunk .bg-gray-700 {
+      background: #4a3a9b;
+    }
+    .theme-cyberpunk .text-white {
+      color: #ff6bd6;
+    }
+    .theme-cyberpunk .text-gray-400 {
+      color: #a855f7;
+    }
+    .theme-cyberpunk .text-gray-300 {
+      color: #d4afff;
+    }
+    .theme-cyberpunk .text-blue-400 {
+      color: #00f7ff;
+    }
+    .theme-cyberpunk .text-green-400 {
+      color: #00ffab;
+    }
+    .theme-cyberpunk .text-red-400 {
+      color: #ff3366;
+    }
+    .header-sticky {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 10, 31, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 20;
+    }
+    .mobile-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 75%;
+      height: 100%;
+      background: #1a1a3b;
+      z-index: 30;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+    .masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes ticker {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const App = () => {
+      const [isLoading, setIsLoading] = React.useState(true);
+      const [isSignedUp, setIsSignedUp] = React.useState(false);
+      const [showSignUpModal, setShowSignUpModal] = React.useState(false);
+      const [theme, setTheme] = React.useState('space');
+      const [showScrollToTop, setShowScrollToTop] = React.useState(false);
+      const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+      React.useEffect(() => {
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }, []);
+
+      React.useEffect(() => {
+        const handleScroll = () => {
+          if (window.scrollY > 300) {
+            setShowScrollToTop(true);
+          } else {
+            setShowScrollToTop(false);
+          }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      const handleSignUp = () => {
+        setIsSignedUp(true);
+        setShowSignUpModal(false);
+        console.log("User signed up successfully");
+      };
+
+      const changeTheme = (newTheme) => {
+        setTheme(newTheme);
+      };
+
+      const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+      };
+
+      if (isLoading) {
+        return (
+          <div className="loading-screen">
+            <h1 className="text-4xl text-white mb-4">Loading Solana Metaverse</h1>
+            <div className="loader"></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className={`theme-${theme}`}>
+          <div className="starfield" />
+          <SignUpModal
+            show={showSignUpModal}
+            onClose={() => setShowSignUpModal(false)}
+            onSignUp={handleSignUp}
+          />
+          <Header changeTheme={changeTheme} theme={theme} toggleMobileMenu={toggleMobileMenu} />
+          <MarketTicker />
+          <div className="flex">
+            <Sidebar isMobileMenuOpen={isMobileMenuOpen} toggleMobileMenu={toggleMobileMenu} />
+            <div className="flex-1 pt-16">
+              <HeroSection />
+              <FeaturesSection />
+              <TestimonialsSection />
+              <VoiceChatInterface
+                isSignedUp={isSignedUp}
+                onSignUpClick={() => setShowSignUpModal(true)}
+              />
+              <PrivateChatrooms />
+              <CryptoResearchHub />
+              <AIAssistantIntegration />
+              <LivePnLTracker />
+              <ActiveTradersInCommunity />
+              <Footer />
+            </div>
+          </div>
+          <button
+            onClick={scrollToTop}
+            className={`scroll-to-top ${showScrollToTop ? '' : 'hidden'} flat-button`}
+            aria-label="Scroll to Top"
+          >
+            ↑
+          </button>
+        </div>
+      );
+    };
+
+    const SignUpModal = ({ show, onClose, onSignUp }) => {
+      if (!show) return null;
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        onSignUp();
+      };
+
+      return (
+        <div className="modal">
+          <div className="modal-content gradient-border">
+            <h2 className="text-2xl mb-4">Sign Up to Use Voice Chat</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">Username</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">Password</label>
+                <input
+                  type="password"
+                  required
+                  className="w-full p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                >
+                  Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-transparent text-gray-300 border border-gray-300 rounded flat-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    const MarketTicker = () => {
+      const initialPrices = [
+        { name: "TRUMP", price: 11.81 },
+        { name: "BONK", price: 0.000029 },
+        { name: "WIF", price: 3.41 },
+        { name: "FARTCOIN", price: 1.20 },
+        { name: "POPCAT", price: 0.87 },
+        { name: "PENGU", price: 0.45 },
+        { name: "GIGA", price: 0.095 },
+        { name: "AI16Z", price: 0.32 },
+      ];
+
+      const [prices, setPrices] = React.useState(initialPrices);
+
+      React.useEffect(() => {
+        const interval = setInterval(() => {
+          setPrices(prevPrices =>
+            prevPrices.map(coin => ({
+              ...coin,
+              price: coin.price * (1 + (Math.random() - 0.5) * 0.1),
+            }))
+          );
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div className="ticker">
+          <div className="ticker-content">
+            {prices.map((coin, index) => (
+              <span key={index} className="text-white mx-4">
+                {coin.name}: ${coin.price.toFixed(6)} 
+              </span>
+            ))}
+            {prices.map((coin, index) => (
+              <span key={`dup-${index}`} className="text-white mx-4">
+                {coin.name}: ${coin.price.toFixed(6)} 
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const Header = ({ changeTheme, theme, toggleMobileMenu }) => {
+      const handleThemeChange = (newTheme) => {
+        changeTheme(newTheme);
+      };
+
+      return (
+        <header className="header-sticky flex justify-between items-center p-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleMobileMenu}
+              className="md:hidden text-blue-400 focus:outline-none"
+              aria-label="Toggle Mobile Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-2xl font-bold">Solana Metaverse</h1>
+          </div>
+          <div className="hidden md:flex gap-2">
+            <div className="tooltip">
+              <button
+                onClick={() => handleThemeChange('space')}
+                className={`px-4 py-2 bg-transparent text-blue-400 border ${theme === 'space' ? 'gradient-border' : 'border-gray-300'} rounded flat-button`}
+                aria-label="Space Theme"
+              >
+                Space
+              </button>
+              <span className="tooltip-text">Grok's Space Theme</span>
+            </div>
+            <div className="tooltip">
+              <button
+                onClick={() => handleThemeChange('light')}
+                className={`px-4 py-2 bg-transparent text-blue-400 border ${theme === 'light' ? 'gradient-border' : 'border-gray-300'} rounded flat-button`}
+                aria-label="Light Theme"
+              >
+                Light
+              </button>
+              <span className="tooltip-text">Minimalist Light Theme</span>
+            </div>
+            <div className="tooltip">
+              <button
+                onClick={() => handleThemeChange('cyberpunk')}
+                className={`px-4 py-2 bg-transparent text-blue-400 border ${theme === 'cyberpunk' ? 'gradient-border' : 'border-gray-300'} rounded flat-button`}
+                aria-label="Cyberpunk Theme"
+              >
+                Cyberpunk
+              </button>
+              <span className="tooltip-text">Neon Cyberpunk Theme</span>
+            </div>
+          </div>
+        </header>
+      );
+    };
+
+    const Sidebar = ({ isMobileMenuOpen, toggleMobileMenu }) => {
+      const handleClick = (section) => {
+        console.log(`Navigating to ${section}`);
+        toggleMobileMenu();
+      };
+
+      return (
+        <>
+          <div className={`mobile-menu md:hidden ${isMobileMenuOpen ? 'open' : ''}`}>
+            <div className="flex justify-between items-center p-4 border-b border-blue-400">
+              <h2 className="text-xl font-bold">Menu</h2>
+              <button
+                onClick={toggleMobileMenu}
+                className="text-blue-400 focus:outline-none"
+                aria-label="Close Mobile Menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center py-4 space-y-6">
+              <div className="w-12 h-12 bg-blue-400 rounded-full neon-glow"></div>
+              <div className="flex flex-col space-y-4">
+                {['home', 'chat', 'research', 'pnl'].map((icon, index) => (
+                  <div className="tooltip" key={index}>
+                    <button
+                      onClick={() => handleClick(icon)}
+                      className="px-4 py-2 bg-gray-700 rounded flat-button text-white"
+                      aria-label={`Navigate to ${icon}`}
+                    >
+                      {icon.charAt(0).toUpperCase() + icon.slice(1)}
+                    </button>
+                    <span className="tooltip-text">{icon.charAt(0).toUpperCase() + icon.slice(1)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="hidden md:block w-20 bg-gray-900 h-screen sticky top-0 flex flex-col items-center py-6 space-y-8 z-10 gradient-border">
+            <div className="w-12 h-12 bg-blue-400 rounded-full neon-glow"></div>
+            <div className="flex flex-col space-y-6">
+              {['home', 'chat', 'research', 'pnl'].map((icon, index) => (
+                <div className="tooltip" key={index}>
+                  <button
+                    onClick={() => handleClick(icon)}
+                    className="w-10 h-10 bg-gray-700 rounded flat-button"
+                    aria-label={`Navigate to ${icon}`}
+                  />
+                  <span className="tooltip-text">{icon.charAt(0).toUpperCase() + icon.slice(1)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    const HeroSection = () => {
+      const handleJoinClick = () => {
+        console.log("Join the Community clicked");
+      };
+
+      return (
+        <section className="relative h-[70vh] flex items-center justify-center bg-gray-900">
+          <div className="text-center z-10 max-w-4xl mx-auto px-4">
+            <div className="w-32 h-32 mx-auto mb-8 bg-blue-400 rounded-full neon-glow"></div>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6">Welcome to Solana Metaverse</h1>
+            <p className="text-xl sm:text-2xl text-gray-300 mb-8">Explore Solana Meme Coins with Grok</p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <div className="tooltip">
+                <button
+                  onClick={handleJoinClick}
+                  className="px-6 py-3 bg-transparent text-blue-400 border gradient-border rounded flat-button text-lg"
+                >
+                  Join the Community
+                </button>
+                <span className="tooltip-text">Join Now</span>
+              </div>
+              <div className="tooltip">
+                <a
+                  href="https://axiom.trade/@sossa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 bg-transparent text-blue-400 border gradient-border rounded flat-button text-lg inline-block"
+                >
+                  Explore Meme Coins
+                </a>
+                <span className="tooltip-text">Visit Axiom Trade</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const FeaturesSection = () => {
+      const handleFeatureClick = (feature) => {
+        console.log(`Feature clicked: ${feature}`);
+      };
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Key Features</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {[
+              { title: "Voice Chat", desc: "Connect with meme coin enthusiasts in real-time." },
+              { title: "AI Assistant", desc: "Get insights on Solana meme coins with Grok." },
+              { title: "Research Hub", desc: "Dive into meme coin metrics and trends." },
+              { title: "PnL Tracker", desc: "Track your meme coin portfolio performance." },
+            ].map((feature, index) => (
+              <div className="tooltip" key={index}>
+                <button
+                  onClick={() => handleFeatureClick(feature.title)}
+                  className="p-6 card w-full text-left h-full"
+                >
+                  <h3 className="text-xl font-semibold text-blue-400 mb-3">{feature.title}</h3>
+                  <p className="text-gray-400">{feature.desc}</p>
+                </button>
+                <span className="tooltip-text">Learn More</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    };
+
+    const TestimonialsSection = () => {
+      const testimonials = [
+        { quote: "The best platform to track Solana meme coins!", author: "CryptoFan" },
+        { quote: "Grok's insights are out of this world!", author: "MemeLord" },
+        { quote: "A must-have for meme coin traders!", author: "StarTrader" },
+      ];
+
+      const [current, setCurrent] = React.useState(0);
+
+      React.useEffect(() => {
+        const interval = setInterval(() => {
+          setCurrent(prev => (prev + 1) % testimonials.length);
+        }, 5000);
+        return () => clearInterval(interval);
+      }, [testimonials.length]);
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">User Testimonials</h2>
+          <div className="sm:hidden">
+            <div className="p-6 card mx-auto max-w-md">
+              <p className="text-gray-300 italic mb-2">"{testimonials[current].quote}"</p>
+              <p className="text-blue-400 font-semibold">— {testimonials[current].author}</p>
+            </div>
+          </div>
+          <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="p-6 card">
+                <p className="text-gray-300 italic mb-2">"{testimonial.quote}"</p>
+                <p className="text-blue-400 font-semibold">— {testimonial.author}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    };
+
+    const VoiceChatInterface = ({ isSignedUp, onSignUpClick }) => {
+      const handleVoiceAction = (action) => {
+        console.log(`${action} clicked`);
+      };
+
+      if (!isSignedUp) {
+        return (
+          <section className="p-8 bg-gray-900 relative z-10">
+            <h2 className="text-4xl font-bold mb-8 text-center">Voice Chat Interface</h2>
+            <div className="card p-6 text-center max-w-md mx-auto">
+              <p className="text-gray-300 mb-4">Please sign up to access Voice Chat.</p>
+              <button
+                onClick={onSignUpClick}
+                className="px-6 py-3 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+              >
+                Sign Up
+              </button>
+            </div>
+          </section>
+        );
+      }
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Voice Chat Interface</h2>
+          <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
+            <div className="md:w-1/4 card p-6">
+              <h3 className="text-xl font-semibold mb-4">Channels</h3>
+              <div className="space-y-4">
+                {[
+                  { name: "Public Rooms", status: "Green (Online)" },
+                  { name: "Private Rooms 🔒", status: "Yellow (Idle)" },
+                  { name: "Direct Messages", status: "Red (Do Not Disturb)" },
+                ].map((channel, index) => (
+                  <div className="tooltip" key={index}>
+                    <button
+                      onClick={() => handleVoiceAction(channel.name)}
+                      className="p-3 bg-gray-700 rounded w-full text-left flat-button"
+                    >
+                      <p className="text-white">{channel.name}</p>
+                      <p className="text-gray-400 text-sm">{channel.status}</p>
+                    </button>
+                    <span className="tooltip-text">Join {channel.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="md:w-3/4 card p-6">
+              <h3 className="text-xl font-semibold mb-4">Main Chat Area</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                {["User1", "User2", "User3"].map((user, index) => (
+                  <div key={index} className="p-3 bg-gray-700 rounded flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-400 rounded-full neon-glow"></div>
+                    <p className="text-white">{user}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex gap-3 flex-wrap">
+                  <div className="tooltip">
+                    <button
+                      onClick={() => handleVoiceAction("Mute")}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      Mute
+                    </button>
+                    <span className="tooltip-text">Mute Microphone</span>
+                  </div>
+                  <div className="tooltip">
+                    <button
+                      onClick={() => handleVoiceAction("Unmute")}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      Unmute
+                    </button>
+                    <span className="tooltip-text">Unmute Microphone</span>
+                  </div>
+                  <input type="range" className="w-32" min="0" max="100" />
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleVoiceAction("Push-to-Talk")}
+                    className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                  >
+                    Push-to-Talk
+                  </button>
+                  <span className="tooltip-text">Hold to Speak</span>
+                </div>
+              </div>
+              <div className="mt-6">
+                <h4 className="text-white mb-3">Settings</h4>
+                <div className="flex gap-3 flex-wrap">
+                  <div className="tooltip">
+                    <button
+                      onClick={() => handleVoiceAction("Join")}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      Join
+                    </button>
+                    <span className="tooltip-text">Join Room</span>
+                  </div>
+                  <div className="tooltip">
+                    <button
+                      onClick={() => handleVoiceAction("Request Access")}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      Request Access
+                    </button>
+                    <span className="tooltip-text">Request Room Access</span>
+                  </div>
+                  <div className="tooltip">
+                    <button
+                      onClick={() => handleVoiceAction("Notifications")}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      Notifications: On
+                    </button>
+                    <span className="tooltip-text">Toggle Notifications</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const PrivateChatrooms = () => {
+      const handleChatroomAction = (action) => {
+        console.log(`${action} clicked`);
+      };
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Private Chatrooms</h2>
+          <div className="card p-6 max-w-4xl mx-auto">
+            <h3 className="text-xl font-semibold mb-4">Access Request</h3>
+            <p className="text-gray-300 mb-4">Room: Meme Coin Elites | Requires: Ownership of Official Trump (TRUMP) | Moderator: @MemeMaster</p>
+            <div className="flex gap-3 mb-6 flex-wrap">
+              <div className="tooltip">
+                <button
+                  onClick={() => handleChatroomAction("Request Access")}
+                  className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                >
+                  Request Access
+                </button>
+                <span className="tooltip-text">Request to Join</span>
+              </div>
+              <div className="tooltip">
+                <button
+                  onClick={() => handleChatroomAction("Learn More")}
+                  className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                >
+                  Learn More
+                </button>
+                <span className="tooltip-text">Room Details</span>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2">
+                <h4 className="text-white mb-3">Discussion Tabs</h4>
+                <div className="flex gap-3 flex-wrap">
+                  {["TRUMP", "BONK", "WIF"].map((tab, index) => (
+                    <div className="tooltip" key={index}>
+                      <button
+                        onClick={() => handleChatroomAction(tab)}
+                        className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                      >
+                        {tab}
+                      </button>
+                      <span className="tooltip-text">Discuss {tab}</span>
+                    </div>
+                  ))}
+                </div>
+                <h4 className="text-white mt-6 mb-3">Pinned Messages</h4>
+                <p className="text-gray-300">Welcome to the Meme Coin Elites room! Discuss top Solana meme coins here.</p>
+              </div>
+              <div className="md:w-1/2">
+                <h4 className="text-white mb-3">Member List</h4>
+                <div className="space-y-4">
+                  {[
+                    { name: "MemeMaster", role: "Moderator", status: "Online" },
+                    { name: "CoinHodler", role: "Member", status: "Idle" },
+                  ].map((member, index) => (
+                    <div key={index} className="p-3 bg-gray-700 rounded">
+                      <p className="text-white">{member.name} ({member.role})</p>
+                      <p className="text-gray-400 text-sm">{member.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const CryptoResearchHub = () => {
+      const handleFilterClick = (filter) => {
+        console.log(`Filter clicked: ${filter}`);
+      };
+
+      const handleCoinClick = (coin) => {
+        console.log(`Coin clicked: ${coin}`);
+      };
+
+      const [activeTab, setActiveTab] = React.useState('new-releases');
+
+      const newReleases = [
+        { name: "PNUT", price: "$2.47", marketCap: "$420M", volume: "$50M", supply: "170M", audit: "Not Audited", sentiment: "Positive", image: "PNUT logo with a cartoon squirrel holding a peanut", launchDate: "November 2024", description: "Inspired by the viral squirrel Peanut, PNUT surged 800% in its first week." },
+        { name: "CHILLGUY", price: "$0.62", marketCap: "$520M", volume: "$60M", supply: "840M", audit: "Not Audited", sentiment: "Positive", image: "CHILLGUY logo with a pixelated dog wearing sunglasses and sipping a drink", launchDate: "May 2024", description: "A relaxed dog meme coin that rocketed with a 40% price surge." },
+        { name: "SPX6900", price: "$1.50", marketCap: "$300M", volume: "$40M", supply: "200M", audit: "Not Audited", sentiment: "Neutral", image: "SPX6900 logo with a satirical take on financial indices", launchDate: "January 2025", description: "A satirical meme coin endorsed by Murad Mahmudov." },
+        { name: "MOODENG", price: "$0.80", marketCap: "$250M", volume: "$30M", supply: "310M", audit: "Not Audited", sentiment: "Positive", image: "MOODENG logo with a baby pygmy hippo in a playful pose", launchDate: "Late 2024", description: "Inspired by a viral baby pygmy hippo from Thailand." },
+      ];
+
+      const topCoins = [
+        { name: "Official Trump (TRUMP)", price: "$11.81", marketCap: "$10B", volume: "$500M", supply: "850M", audit: "Audited by CertiK", sentiment: "Positive", image: "TRUMP logo with a golden eagle and red-white-blue colors" },
+        { name: "Bonk (BONK)", price: "$0.000029", marketCap: "$2.1B", volume: "$200M", supply: "72T", audit: "Audited by SlowMist", sentiment: "Neutral", image: "BONK logo with a cartoon Shiba Inu dog in bright yellow" },
+        { name: "Dogwifhat (WIF)", price: "$3.41", marketCap: "$3.4B", volume: "$300M", supply: "998M", audit: "Audited by Trail of Bits", sentiment: "Positive", image: "WIF logo with a Shiba Inu wearing a pink hat on a neon background" },
+        { name: "Fartcoin (FARTCOIN)", price: "$1.20", marketCap: "$1.5B", volume: "$150M", supply: "1.2B", audit: "Audited by Hacken", sentiment: "Neutral", image: "FARTCOIN logo with a playful cloud and green fumes in a comic style" },
+        { name: "Popcat (POPCAT)", price: "$0.87", marketCap: "$870M", volume: "$100M", supply: "1B", audit: "Not Audited", sentiment: "Positive", image: "POPCAT logo with a cat making a popping mouth gesture in vibrant pink" },
+        { name: "Pengu (PENGU)", price: "$0.45", marketCap: "$450M", volume: "$80M", supply: "88.8B", audit: "Audited by Quantstamp", sentiment: "Neutral", image: "PENGU logo with a cute cartoon penguin on an icy blue background" },
+        { name: "Gigachad (GIGA)", price: "$0.095", marketCap: "$950M", volume: "$90M", supply: "10B", audit: "Not Audited", sentiment: "Positive", image: "GIGA logo with a muscular man silhouette in black and white with a neon glow" },
+        { name: "AI16Z (AI16Z)", price: "$0.32", marketCap: "$320M", volume: "$70M", supply: "1B", audit: "Audited by OpenZeppelin", sentiment: "Neutral", image: "AI16Z logo with a futuristic AI brain in neon blue and purple" },
+      ];
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Crypto Research Hub - Solana Meme Coins</h2>
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search Solana Meme Coins (e.g., BONK, WIF)"
+                className="w-full p-3 bg-gray-800 text-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <div className="flex gap-3 mt-4 flex-wrap">
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFilterClick("Blockchain: Solana")}
+                    className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                  >
+                    Blockchain: Solana
+                  </button>
+                  <span className="tooltip-text">Filter by Blockchain</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFilterClick("Sort by Market Cap")}
+                    className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                  >
+                    Sort by Market Cap
+                  </button>
+                  <span className="tooltip-text">Sort by Market Cap</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFilterClick("Sort by Launch Date")}
+                    className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                  >
+                    Sort by Launch Date
+                  </button>
+                  <span className="tooltip-text">Sort by Launch Date</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-4 mb-6 border-b border-blue-400">
+              <button
+                onClick={() => setActiveTab('new-releases')}
+                className={`px-4 py-2 text-lg ${activeTab === 'new-releases' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+              >
+                New Releases
+              </button>
+              <button
+                onClick={() => setActiveTab('top-coins')}
+                className={`px-4 py-2 text-lg ${activeTab === 'top-coins' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+              >
+                Top Meme Coins
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {(activeTab === 'new-releases' ? newReleases : topCoins).map((coin, index) => (
+                <div className="tooltip" key={index}>
+                  <button
+                    onClick={() => handleCoinClick(coin.name)}
+                    className="p-6 card w-full text-left"
+                  >
+                    <div className="flex items-center mb-3">
+                      <span className="meme-coin-logo" title={coin.image}></span>
+                      <div>
+                        <p className="text-white font-semibold text-lg">{coin.name}</p>
+                        {coin.launchDate && <p className="text-gray-400 text-sm">Launched: {coin.launchDate}</p>}
+                      </div>
+                    </div>
+                    {coin.description && <p className="text-gray-400 mb-2">{coin.description}</p>}
+                    <p className="text-gray-400">Price: {coin.price}</p>
+                    <p className="text-gray-400">Market Cap: {coin.marketCap}</p>
+                    <p className="text-gray-400">24h Volume: {coin.volume}</p>
+                    <p className="text-gray-400">Circulating Supply: {coin.supply}</p>
+                    <p className="text-gray-400">Audit: {coin.audit}</p>
+                    <p className="text-gray-400">Sentiment: {coin.sentiment}</p>
+                  </button>
+                  <span className="tooltip-text">View {coin.name} Details</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const AIAssistantIntegration = () => {
+      const handleAskClick = () => {
+        console.log("AI Assistant: Ask button clicked");
+      };
+
+      const handleSuggestionClick = (suggestion) => {
+        console.log(`Suggestion clicked: ${suggestion}`);
+      };
+
+      const handleSourceClick = () => {
+        console.log("View Source clicked");
+      };
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Grok AI Assistant</h2>
+          <div className="card p-6 max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-blue-400 rounded-full neon-glow" title="Grok's holographic avatar with glowing blue circuits"></div>
+              <input
+                type="text"
+                placeholder="Ask Grok about Solana meme coins..."
+                className="flex-1 p-3 bg-gray-700 text-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <div className="tooltip">
+                <button
+                  onClick={handleAskClick}
+                  className="p-3 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 4V2m0 20v-2m8-8h2m-20 0h2m15.071-6.071l-1.414 1.414M5.343 18.657l1.414-1.414m11.314 0l-1.414-1.414M5.343 5.343l1.414 1.414" />
+                  </svg>
+                </button>
+                <span className="tooltip-text">Ask Grok</span>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-700 rounded mb-4">
+              <p className="text-white">Grok: Official Trump (TRUMP) has a market cap of $10B and a positive community sentiment. Want to explore more coins?</p>
+              <div className="tooltip">
+                <button
+                  onClick={handleSourceClick}
+                  className="text-blue-400 hover:text-blue-300 mt-2"
+                >
+                  View Source
+                </button>
+                <span className="tooltip-text">View Source</span>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-700 rounded">
+              <h4 className="text-white mb-3">Grok's Suggestions</h4>
+              <div className="flex gap-3 flex-wrap">
+                {["Bonk (BONK)", "Dogwifhat (WIF)", "Fartcoin (FARTCOIN)"].map((suggestion, index) => (
+                  <div className="tooltip" key={index}>
+                    <button
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                    >
+                      {suggestion}
+                    </button>
+                    <span className="tooltip-text">Ask about {suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const LivePnLTracker = () => {
+      const handleCurrencyChange = (event) => {
+        console.log(`Currency changed to: ${event.target.value}`);
+      };
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Live PnL Tracker</h2>
+          <div className="card p-6 max-w-3xl mx-auto">
+            <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+              <div>
+                <p className="text-white text-lg">Current Balance: $15,000.00</p>
+                <p className="text-green-400">Daily Change: +5.2%</p>
+              </div>
+              <div className="tooltip">
+                <select
+                  onChange={handleCurrencyChange}
+                  className="p-2 bg-gray-700 text-white rounded flat-button"
+                >
+                  <option value="USD">USD</option>
+                  <option value="SOL">SOL</option>
+                  <option value="ETH">ETH</option>
+                </select>
+                <span className="tooltip-text">Change Currency</span>
+              </div>
+            </div>
+            <div className="h-48 flex items-end space-x-3 mb-4">
+              {[3, 4, 2, 5, 6].map((height, index) => (
+                <div key={index} className="w-10 bg-blue-400 rounded-t neon-glow" style={{ height: `${height * 24}px` }}></div>
+              ))}
+            </div>
+            <div className="flex justify-between text-gray-400">
+              {['Jan', 'Feb', 'Mar', 'Apr', 'May'].map((month, index) => (
+                <span key={index}>{month}</span>
+              ))}
+            </div>
+            <div className="mt-4">
+              <p className="text-white">Alert: TRUMP price surged by 10%!</p>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const ActiveTradersInCommunity = () => {
+      const randomNames = ["ShadowTrader", "CryptoNinja", "MoonSeeker", "StarHodler", "NeonWhale", "PixelFox"];
+      let nameIndex = 0;
+
+      const memeCoins = [
+        { name: "Official Trump (TRUMP)", image: "TRUMP logo with a golden eagle and red-white-blue colors" },
+        { name: "Bonk (BONK)", image: "BONK logo with a cartoon Shiba Inu dog in bright yellow" },
+        { name: "Dogwifhat (WIF)", image: "WIF logo with a Shiba Inu wearing a pink hat on a neon background" },
+        { name: "Fartcoin (FARTCOIN)", image: "FARTCOIN logo with a playful cloud and green fumes in a comic style" },
+        { name: "Popcat (POPCAT)", image: "POPCAT logo with a cat making a popping mouth gesture in vibrant pink" },
+        { name: "Pengu (PENGU)", image: "PENGU logo with a cute cartoon penguin on an icy blue background" },
+        { name: "Gigachad (GIGA)", image: "GIGA logo with a muscular man silhouette in black and white with a neon glow" },
+        { name: "AI16Z (AI16Z)", image: "AI16Z logo with a futuristic AI brain in neon blue and purple" },
+      ];
+
+      const initialWallets = [
+        { trackedWalletAddress: "27v6nVjBsjSqYmohpMYam65yine9KqLcVd9mLyJ1KkJn", name: "Rename wallet", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "3URnnJKdG8TjrKo7G8rN5GjzweYwSZSxwyJm5Ut5UmL", name: "FRANK2", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "3v84jbUYvfZqmTFTK1H3B2txnUQZGRLET9nJ9qMjXgkF", name: "toly2", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "4R5uXifVBYT9E4x7Xk1o4csihhV6SyVBaLbUu1r8GzfK", name: "????", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "5qy4RbAuzSPkUNxSKfciu6Qvqu7jk1JxHroztKGLa3Lt", name: "rr", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "5rkPDK4JnVAumgzeV2Zu8vjggMTtHdDtrsd5o9dhGZHD", name: "david p", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "5ZZnqunFJZr7QgL6ciFGJtbdy35GoVkvv672JTWhVgET", name: "defiantwale", emoji: "🦈", alertsOn: true },
+        { trackedWalletAddress: "62XzKnBymcyYujkHXzkcx2Y6GbPZg1jJVRi6agBbRVZU", name: "one clip", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "6v3nv8BUJKpXvnBnD4ZvpDiG3u847ALLYyo1NACn2zmV", name: "watch", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "73LnJ7G9ffBDjEBGgJDdgvLUhD5APLonKrNiHsKDCw5B", name: "oringie", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "8rvAsDKeAcEjEkiZMug9k8v1y8mW6gQQiMobd89Uy7qR", name: "CASINO", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "8zFZHuSRuDpuAR7J6FzwyF3vKNx4CVW3DFHJerQhc7Zd", name: "POW", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "9X5n5i1mugTjgGPhqf1KJDt8r4kD8TF3s62ttbxKzFHa", name: "pancakeswap ceo", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "AJ6MGExeK7FXmeKkKPmALjcdXVStXYokYNv9uVfDRtvo", name: "damplayboii", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "Ay9wnuZCRTceZJuRpGZnuwYZuWdsviM4cMiCwFoSQiPH", name: "mhm", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "C1qsEgTcCGUJG9kWCbzSWVH3Yvz6ZCMEkXjXVDQMRzkY", name: "Rename wallet", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "CRVidEDtEUTYZisCxBZkpELzhQc9eauMLR3FWg74tReL", name: "FRANK", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o", name: "cented", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", name: "gake", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "DRXVJ6rgaQqPUtkhPGwdTSmh2eqjdDTSBJyxp1sBppfd", name: "Rename wallet", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "ECCKBDWX3MkEcf3bULbLBb9FvrEQLsmPMFTKFpvjzqgP", name: "toly1", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "ELrm4Ff8iB5uNDJneEtAM24BFQQ7Qy5hBpAWGHMhuSMh", name: "Rename wallet", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "FQqP4kZjd9VYbKMUujZXNAGdFaz2tb2hJLbZXkv2zvr3", name: "hjk", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "FXzJ6xwH2HfdKshERVAYiLh79PAUw9zC7ucngupt91ap", name: "dave side", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "G5nxEXuFMfV74DSnsrSatqCW32F34XUnBeq3PfDS7w5E", name: "early bird", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "Gq5RiX43ew6Vujb81N5P7kgYbdc3sYgzdVv4W9mqbV5c", name: "Rename wallet", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "hD5wsPWy7xzU8aVxToZsgiAVvjhHgf4A6AmA1Cjn49o", name: "GAKE2", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", name: "west", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "kQdJVZvix2BPCz2i46ErUPk2a74Uf37QZL5jsRdAD8y", name: "ty", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "suqh5sHtr8HyJ7q8scBimULPkPpA557prMG47xCHQfK", name: "cupsey", emoji: "👻", alertsOn: true },
+        { trackedWalletAddress: "z8pUzTXG5hVEbWeYtuA7S4uDteFaG62dGk9oW79myYx", name: "kid", emoji: "👻", alertsOn: true },
+      ];
+
+      const updatedWallets = initialWallets.map(wallet => {
+        if (wallet.name === "Rename wallet") {
+          const newName = randomNames[nameIndex % randomNames.length];
+          nameIndex++;
+          return { ...wallet, name: newName };
+        }
+        return wallet;
+      });
+
+      const [wallets, setWallets] = React.useState(
+        updatedWallets.map((wallet, index) => ({
+          ...wallet,
+          pnl: ((Math.random() * 450000 + 50000) * (Math.random() > 0.5 ? 1 : -1)).toFixed(2),
+          yearlyPnL: ((Math.random() * 4500000 + 500000) * (Math.random() > 0.5 ? 1 : -1)).toFixed(2),
+          memeCoin: memeCoins[index % memeCoins.length],
+        }))
+      );
+
+      React.useEffect(() => {
+        const interval = setInterval(() => {
+          setWallets(prevWallets =>
+            prevWallets.map(wallet => ({
+              ...wallet,
+              pnl: ((Math.random() * 450000 + 50000) * (Math.random() > 0.5 ? 1 : -1)).toFixed(2),
+              yearlyPnL: ((Math.random() * 4500000 + 500000) * (Math.random() > 0.5 ? 1 : -1)).toFixed(2),
+            }))
+          );
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      const overallPnL = wallets.reduce((sum, wallet) => sum + parseFloat(wallet.pnl), 0).toFixed(2);
+
+      const handleWalletClick = (walletName) => {
+        console.log(`Wallet clicked: ${walletName}`);
+      };
+
+      const formatNumber = (num) => {
+        return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      };
+
+      return (
+        <section className="p-8 bg-gray-900 relative z-10">
+          <h2 className="text-4xl font-bold mb-8 text-center">Active Traders in Community</h2>
+          <div className="mb-6 text-center">
+            <p className="text-white text-lg">
+              Overall Community PnL: <span className={overallPnL >= 0 ? "text-green-400" : "text-red-400"}>{overallPnL >= 0 ? "+" : "-"}${formatNumber(Math.abs(overallPnL))}</span>
+            </p>
+          </div>
+          <div className="masonry-grid max-w-6xl mx-auto">
+            {wallets.map((wallet, index) => (
+              <div className="tooltip" key={index}>
+                <button
+                  onClick={() => handleWalletClick(wallet.name)}
+                  className="p-6 card w-full text-left"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="meme-coin-logo" title={wallet.memeCoin.image}></span>
+                    <span className="text-2xl">{wallet.emoji}</span>
+                    <p className="text-white font-semibold text-lg">{wallet.name}</p>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Address: <span>{wallet.trackedWalletAddress.slice(0, 4)}...{wallet.trackedWalletAddress.slice(-2)}</span>
+                  </p>
+                  <p className="text-gray-400">Alerts: {wallet.alertsOn ? "On" : "Off"}</p>
+                  <p className={parseFloat(wallet.pnl) >= 0 ? "text-green-400" : "text-red-400"}>Current PnL: {parseFloat(wallet.pnl) >= 0 ? "+" : "-"}${formatNumber(Math.abs(wallet.pnl))}</p>
+                  <p className={parseFloat(wallet.yearlyPnL) >= 0 ? "text-green-400" : "text-red-400"}>Yearly PnL: {parseFloat(wallet.yearlyPnL) >= 0 ? "+" : "-"}${formatNumber(Math.abs(wallet.yearlyPnL))}</p>
+                </button>
+                <span className="tooltip-text">View {wallet.name}'s Profile</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    };
+
+    const Footer = () => {
+      const handleFooterLinkClick = (link) => {
+        console.log(`Footer link clicked: ${link}`);
+      };
+
+      const handleNewsletterSubmit = (e) => {
+        e.preventDefault();
+        console.log("Newsletter subscription submitted");
+      };
+
+      return (
+        <footer className="p-8 bg-gray-900 relative z-10">
+          <div className="border-t gradient-border mb-6"></div>
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h4 className="text-xl font-semibold mb-4">About</h4>
+              <p className="text-gray-400">© 2025 Solana Metaverse. All rights reserved.</p>
+            </div>
+            <div>
+              <h4 className="text-xl font-semibold mb-4">Links</h4>
+              <div className="flex flex-col gap-3">
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("About")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    About
+                  </button>
+                  <span className="tooltip-text">About Us</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Contact")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Contact
+                  </button>
+                  <span className="tooltip-text">Contact Us</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Privacy Policy")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Privacy Policy
+                  </button>
+                  <span className="tooltip-text">Privacy Policy</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Terms of Service")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Terms of Service
+                  </button>
+                  <span className="tooltip-text">Terms of Service</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xl font-semibold mb-4">Stay Connected</h4>
+              <div className="flex gap-3 mb-4 flex-wrap">
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Twitter")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Twitter
+                  </button>
+                  <span className="tooltip-text">Follow on Twitter</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Discord")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Discord
+                  </button>
+                  <span className="tooltip-text">Join Discord</span>
+                </div>
+                <div className="tooltip">
+                  <button
+                    onClick={() => handleFooterLinkClick("Telegram")}
+                    className="text-blue-400 hover:text-blue-300 flat-button"
+                  >
+                    Telegram
+                  </button>
+                  <span className="tooltip-text">Join Telegram</span>
+                </div>
+              </div>
+              <h4 className="text-xl font-semibold mb-4">Newsletter</h4>
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-3">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                  className="p-2 bg-gray-700 text-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 flex-1"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-transparent text-blue-400 border gradient-border rounded flat-button"
+                >
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          </div>
+        </footer>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
